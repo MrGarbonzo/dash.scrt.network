@@ -3,8 +3,25 @@ import { tokens, snips, ICSTokens, chains } from './config'
 import mixpanel from 'mixpanel-browser'
 import { SecretNetworkClient } from 'secretjs'
 
-export const faucetURL = 'https://faucet.secretsaturn.net/claim'
-export const faucetAddress = 'secret1tq6y8waegggp4fv2fcxk3zmpsmlfadyc7lsd69'
+// Runtime configuration - supports both Docker runtime injection and Vite build-time env vars
+declare global {
+  interface Window {
+    ENV?: {
+      VITE_FAUCET_URL?: string
+      VITE_FAUCET_ADDRESS?: string
+    }
+  }
+}
+
+export const faucetURL =
+  (typeof window !== 'undefined' && window.ENV?.VITE_FAUCET_URL) ||
+  import.meta.env.VITE_FAUCET_URL ||
+  'http://localhost:3001/claim'
+
+export const faucetAddress =
+  (typeof window !== 'undefined' && window.ENV?.VITE_FAUCET_ADDRESS) ||
+  import.meta.env.VITE_FAUCET_ADDRESS ||
+  'secret1kreu9upy9v9hlm2e4xytmm2ptn6qag7vp5jfr3'
 
 export const batchQueryContractAddress = 'secret17gnlxnwux0szd7qhl90ym8lw22qvedjz4v09dm'
 export const batchQueryCodeHash = '72a09535b77b76862f7b568baf1ddbe158a2e4bbd0f0879c69ada9b398e31c1f'

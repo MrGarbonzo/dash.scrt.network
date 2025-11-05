@@ -11,6 +11,8 @@
   </head>
   <body>
     <div id="root" class="bg-[#feebda] dark:bg-neutral-900 text-black dark:text-white"></div>
+    <!-- Runtime configuration injected by Docker -->
+    <script src="/config.js"></script>
     <script>
       // fix the keplr window type error when there are no node polyfills
       var global = global || window
