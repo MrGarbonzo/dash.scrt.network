@@ -1,11 +1,79 @@
-version: "3.8"
+version: '3.8'
+
 services:
-  dashboard_react_app:
-    container_name: dashboard_frontend2
-    build: ./
+  # Secret Network Dashboard
+  dashboard:
+    image: ghcr.io/mrgarbonzo/dash.scrt.network:latest
+    container_name: secret-dashboard
     ports:
-      - "3000:3000"
-    stdin_open: true
-    tty: true
+      - '3000:3000'
     environment:
-      - CHOKIDAR_USEPOLLING=true
+      # Faucet configuration - points to faucet service within Docker network
+      VITE_FAUCET_URL: ${VITE_FAUCET_URL:-http://faucet:3001/claim}
+      VITE_FAUCET_ADDRESS: ${VITE_FAUCET_ADDRESS}
+      # Optional: Analytics and third-party integrations
+      VITE_MIXPANEL_ENABLED: ${VITE_MIXPANEL_ENABLED:-false}
+      VITE_MIXPANEL_PROJECT_TOKEN: ${VITE_MIXPANEL_PROJECT_TOKEN:-}
+      VITE_DEBUG_MODE: ${VITE_DEBUG_MODE:-false}
+      TRANSAK_API_KEY: ${TRANSAK_API_KEY:-}
+    networks:
+      - secret-network
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/']
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      faucet:
+        condition: service_healthy
+
+  # Fee Grant Faucet
+  faucet:
+    image: ghcr.io/mrgarbonzo/feegrantfaucet2.0:latest
+    container_name: feegrant-faucet
+    ports:
+      - '3001:3001'
+    environment:
+      # Chain configuration
+      CHAIN_ID: ${CHAIN_ID:-secret-4}
+      LCD_NODE: ${LCD_NODE}
+
+      # Port configuration
+      PORT: ${PORT:-3001}
+
+      # Fee grant configuration
+      FAUCET_AMOUNT: ${FAUCET_AMOUNT:-50000}
+      FAUCET_DENOM: ${FAUCET_DENOM:-uscrt}
+      FAUCET_RELOAD_TIME: ${FAUCET_RELOAD_TIME:-24}
+
+      # Gas configuration
+      GAS_FEE: ${GAS_FEE:-0.5}
+      GAS_DENOM: ${GAS_DENOM:-uscrt}
+      GAS_LIMIT: ${GAS_LIMIT:-17500}
+
+      # Transaction memo
+      MEMO: ${MEMO:-Fee Grant provided by Secret Network Dashboard}
+
+      # CRITICAL: Wallet mnemonic (keep secure in TEE environment)
+      FAUCET_MNEMOMIC: ${FAUCET_MNEMOMIC}
+    networks:
+      - secret-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:3001/', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+        ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+networks:
+  secret-network:
+    driver: bridge
