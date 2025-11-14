@@ -1,15 +1,23 @@
 services:
-  # Secret Network Dashboard
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflare-tunnel
+    command: tunnel --no-autoupdate --url http://faucet:3001
+    networks:
+      - secret-network
+    restart: unless-stopped
+    depends_on:
+      faucet:
+        condition: service_healthy
+
   dashboard:
     image: ghcr.io/mrgarbonzo/dash.scrt.network:latest
     container_name: secret-dashboard
     ports:
-      - '3000:3000'
+      - 3000:3000
     environment:
-      # Faucet configuration - points to faucet service within Docker network
       VITE_FAUCET_URL: ${VITE_FAUCET_URL:-http://faucet:3001/claim}
       VITE_FAUCET_ADDRESS: ${VITE_FAUCET_ADDRESS}
-      # Optional: Analytics and third-party integrations
       VITE_MIXPANEL_ENABLED: ${VITE_MIXPANEL_ENABLED:-false}
       VITE_MIXPANEL_PROJECT_TOKEN: ${VITE_MIXPANEL_PROJECT_TOKEN:-}
       VITE_DEBUG_MODE: ${VITE_DEBUG_MODE:-false}
@@ -18,7 +26,13 @@ services:
       - secret-network
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/']
+      test:
+        - CMD
+        - wget
+        - --no-verbose
+        - --tries=1
+        - --spider
+        - http://localhost:3000/
       interval: 30s
       timeout: 3s
       retries: 3
@@ -26,51 +40,42 @@ services:
     depends_on:
       faucet:
         condition: service_healthy
+    env_file:
+      - usr/.env
 
-  # Fee Grant Faucet
   faucet:
     image: ghcr.io/mrgarbonzo/feegrantfaucet2.0:latest
     container_name: feegrant-faucet
     ports:
-      - '3001:3001'
+      - 3001:3001
     environment:
-      # Chain configuration
       CHAIN_ID: ${CHAIN_ID:-secret-4}
       LCD_NODE: ${LCD_NODE}
-
-      # Port configuration
       PORT: ${PORT:-3001}
-
-      # Fee grant configuration
       FAUCET_AMOUNT: ${FAUCET_AMOUNT:-50000}
       FAUCET_DENOM: ${FAUCET_DENOM:-uscrt}
       FAUCET_RELOAD_TIME: ${FAUCET_RELOAD_TIME:-24}
-
-      # Gas configuration
       GAS_FEE: ${GAS_FEE:-0.5}
       GAS_DENOM: ${GAS_DENOM:-uscrt}
       GAS_LIMIT: ${GAS_LIMIT:-17500}
-
-      # Transaction memo
       MEMO: ${MEMO:-Fee Grant provided by Secret Network Dashboard}
-
-      # CRITICAL: Wallet mnemonic (keep secure in TEE environment)
       FAUCET_MNEMOMIC: ${FAUCET_MNEMOMIC}
     networks:
       - secret-network
     restart: unless-stopped
     healthcheck:
       test:
-        [
-          'CMD',
-          'node',
-          '-e',
-          "require('http').get('http://localhost:3001/', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
-        ]
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://localhost:3001/', (r) =>
+          {process.exit(r.statusCode === 200 ? 0 : 1)})"
       interval: 30s
       timeout: 3s
       retries: 3
       start_period: 10s
+    env_file:
+      - usr/.env
 
 networks:
   secret-network:
