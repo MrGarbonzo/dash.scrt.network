@@ -8,8 +8,8 @@ export async function onRequest(context: any) {
   // Extract the path after /api/
   const apiPath = url.pathname.replace('/api/', '/')
 
-  // Backend server URL (your VM)
-  const BACKEND_URL = 'http://104.131.104.100:3001'
+  // Backend server URL (from environment variable or default to test VM)
+  const BACKEND_URL = context.env.BACKEND_URL || 'http://104.131.104.100:3001'
 
   // Build the backend URL
   const backendUrl = `${BACKEND_URL}${apiPath}${url.search}`
