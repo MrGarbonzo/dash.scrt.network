@@ -14,7 +14,7 @@ body:not(.dark) {
   @apply bg-[#feebda];
 }
 body.dark {
-  @apply bg-neutral-900;
+  @apply bg-indigo-950;
 }
 
 ::selection {
