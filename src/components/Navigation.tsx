@@ -2,7 +2,6 @@ import { faReact } from '@fortawesome/free-brands-svg-icons'
 import {
   faArrowUpRightFromSquare,
   faBook,
-  faBriefcase,
   faChartLine,
   faChevronDown,
   faCircleNodes,
@@ -13,8 +12,6 @@ import {
   faCreditCard,
   faPaperPlane,
   faPieChart,
-  faSeedling,
-  faArrowTrendUp,
   faHouse
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -303,24 +300,7 @@ export function Navigation({
             </li>
             <li>
               <a
-                href="https://tokengarden.secretsaturn.net"
-                target="_blank"
-                className="cursor-pointer dark:hover:text-white w-full lg:mx-8 rounded-xl transition-colors text-neutral-600 dark:text-neutral-300 hover:text-black block lg:flex lg:items-center"
-                onClick={() => {
-                  trackMixPanelEvent('Clicked external Token Garden')
-                }}
-              >
-                <FontAwesomeIcon icon={faSeedling} className="mr-2" />
-                <span>Token Garden</span>
-                {/*span className="ml-2 bg-purple-100 text-purple-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-purple-900 dark:text-purple-300">
-                  New
-                </span>*/}
-                <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-xs ml-2" size={'xs'} />
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://www.mintscan.io/secret"
+                href="https://zonescan.io/secret/overview"
                 target="_blank"
                 className="cursor-pointer dark:hover:text-white w-full lg:mx-8 rounded-xl transition-colors text-neutral-600 dark:text-neutral-300 hover:text-black block lg:flex lg:items-center"
                 onClick={() => {
@@ -343,20 +323,6 @@ export function Navigation({
               >
                 <FontAwesomeIcon icon={faBook} className="mr-2" />
                 <span>Documentation</span>
-                <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-xs ml-2" size={'xs'} />
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://cryptoclerk.xyz/"
-                target="_blank"
-                className="cursor-pointer dark:hover:text-white w-full lg:mx-8 rounded-xl transition-colors text-neutral-600 dark:text-neutral-300 hover:text-black block lg:flex lg:items-center"
-                onClick={() => {
-                  trackMixPanelEvent('Clicked external Cryptoclerk')
-                }}
-              >
-                <FontAwesomeIcon icon={faBriefcase} className="mr-2" />
-                Crypto Clerk
                 <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-xs ml-2" size={'xs'} />
               </a>
             </li>
