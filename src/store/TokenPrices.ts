@@ -10,34 +10,38 @@ export interface CoinPrice {
 }
 
 interface TokenPricesState {
-  priceMapping: Map<Token, number>
+  priceMapping: Map<string, number>
   init: () => void
   isInitialized: boolean
   getPrice: (token: Token) => Nullable<string>
   getValuePrice: (token: Token, amount: BigNumber) => Nullable<number>
+  getPriceByCoingeckoId: (coingeckoId: string) => Nullable<number>
 }
 
 export const useTokenPricesStore = create<TokenPricesState>()((set, get) => ({
   priceMapping: null,
   isInitialized: false,
   init: () => {
-    let prices: CoinPrice[]
+    const coinGeckoIds = allTokens
+      .map((token) => token.coingecko_id)
+      .filter(Boolean)
+      .join(',')
 
-    /*let coinGeckoIdsString: string = allTokens.map((token) => token.coingecko_id).join(',')
-    console.log(coinGeckoIdsString)*/
+    const apiKey = import.meta.env.VITE_COINGECKO_API_KEY
+    const baseUrl = apiKey
+      ? 'https://pro-api.coingecko.com/api/v3'
+      : 'https://api.coingecko.com/api/v3'
 
-    // fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoIdsString}&vs_currencies=USD`)
-    fetch(`https://priceapibuffer.secretsaturn.net/getPrices`)
+    set({ isInitialized: true })
+
+    fetch(`${baseUrl}/simple/price?ids=${coinGeckoIds}&vs_currencies=usd`, {
+      headers: apiKey ? { 'x-cg-pro-api-key': apiKey } : {}
+    })
       .then((resp) => resp.json())
       .then((result: { [coingecko_id: string]: { usd: number } }) => {
-        const formattedPrices = Object.entries(result).map(([coingecko_id, { usd }]) => ({
-          coingecko_id,
-          priceUsd: usd
-        }))
-        prices = formattedPrices
-        const priceMapping = new Map<Token, number>()
-        allTokens.forEach((token: Token) => {
-          priceMapping.set(token, prices.find((price: any) => price.coingecko_id === token.coingecko_id)?.priceUsd)
+        const priceMapping = new Map<string, number>()
+        Object.entries(result).forEach(([coingecko_id, { usd }]) => {
+          priceMapping.set(coingecko_id, usd)
         })
 
         set({
@@ -46,24 +50,22 @@ export const useTokenPricesStore = create<TokenPricesState>()((set, get) => ({
       })
       .catch((error) => {
         console.error(error)
-        const priceMapping = new Map<Token, number>()
-        tokens.forEach((token: Token) => {
-          priceMapping.set(token, undefined)
-        })
         set({
-          priceMapping: priceMapping
+          priceMapping: new Map<string, number>()
         })
       })
-    set({
-      priceMapping: new Map<Token, number>(),
-      isInitialized: true
-    })
+  },
+  getPriceByCoingeckoId: (coingeckoId: string): Nullable<number> => {
+    if (!get().isInitialized) {
+      get().init()
+    }
+    return get().priceMapping?.get(coingeckoId) ?? null
   },
   getPrice: (token: Token) => {
     if (!get().isInitialized) {
       get().init()
     }
-    const tokenPrice = get().priceMapping.get(token)
+    const tokenPrice = get().priceMapping?.get(token.coingecko_id)
     if (tokenPrice !== undefined) {
       return toCurrencyString(tokenPrice)
     }
@@ -73,7 +75,7 @@ export const useTokenPricesStore = create<TokenPricesState>()((set, get) => ({
     if (!get().isInitialized) {
       get().init()
     }
-    const tokenPrice = get().priceMapping.get(token)
+    const tokenPrice = get().priceMapping?.get(token.coingecko_id)
     if (tokenPrice !== undefined) {
       const result = new BigNumber(tokenPrice).multipliedBy(amount).dividedBy(`1e${token.decimals}`)
       return Number(result)

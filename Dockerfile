@@ -9,13 +9,13 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install --legacy-peer-deps && npm install -D sass-embedded
 
 # Copy source files
 COPY . .
 
-# Build production bundle
-RUN npm run build
+# Build production bundle (increase memory limit)
+RUN NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
 # Stage 2: Serve with nginx
 FROM nginx:alpine
@@ -30,26 +30,10 @@ RUN printf 'server {\n    listen 3000;\n    server_name _;\n    root /usr/share/
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Create config template
-RUN cat > /usr/share/nginx/html/config.js.template <<'EOF'
-window.ENV = {
-  VITE_FAUCET_URL: "${VITE_FAUCET_URL}",
-  VITE_FAUCET_ADDRESS: "${VITE_FAUCET_ADDRESS}",
-  VITE_MIXPANEL_ENABLED: "${VITE_MIXPANEL_ENABLED}",
-  VITE_MIXPANEL_PROJECT_TOKEN: "${VITE_MIXPANEL_PROJECT_TOKEN}",
-  VITE_DEBUG_MODE: "${VITE_DEBUG_MODE}",
-  TRANSAK_API_KEY: "${TRANSAK_API_KEY}"
-};
-EOF
+RUN printf 'window.ENV = {\n  VITE_FAUCET_URL: "${VITE_FAUCET_URL}",\n  VITE_FAUCET_ADDRESS: "${VITE_FAUCET_ADDRESS}",\n  VITE_MIXPANEL_ENABLED: "${VITE_MIXPANEL_ENABLED}",\n  VITE_MIXPANEL_PROJECT_TOKEN: "${VITE_MIXPANEL_PROJECT_TOKEN}",\n  VITE_DEBUG_MODE: "${VITE_DEBUG_MODE}",\n  TRANSAK_API_KEY: "${TRANSAK_API_KEY}"\n};\n' > /usr/share/nginx/html/config.js.template
 
 # Create entrypoint script
-RUN cat > /docker-entrypoint.sh <<'EOF'
-#!/bin/sh
-# Inject environment variables into config.js
-envsubst < /usr/share/nginx/html/config.js.template > /usr/share/nginx/html/config.js
-echo "Runtime configuration injected"
-exec nginx -g "daemon off;"
-EOF
-RUN chmod +x /docker-entrypoint.sh
+RUN printf '#!/bin/sh\nenvsubst < /usr/share/nginx/html/config.js.template > /usr/share/nginx/html/config.js\necho "Runtime configuration injected"\nexec nginx -g "daemon off;"\n' > /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 
 # Expose port 3000
 EXPOSE 3000

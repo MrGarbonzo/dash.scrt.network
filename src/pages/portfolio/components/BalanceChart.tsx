@@ -28,7 +28,14 @@ export default function BalanceChart() {
   const chartRef = useRef<ChartJS<'doughnut', number[], string>>(null)
 
   const { balanceMapping } = useSecretNetworkClientStore()
-  const { getValuePrice, priceMapping } = useTokenPricesStore()
+  const { getValuePrice, priceMapping, init, isInitialized } = useTokenPricesStore()
+
+  // Ensure price data is initialized
+  useEffect(() => {
+    if (!isInitialized) {
+      init()
+    }
+  }, [isInitialized, init])
   const { convertCurrency } = useContext(APIContext)
 
   const { theme, currency } = useUserPreferencesStore()
@@ -47,7 +54,7 @@ export default function BalanceChart() {
 
   const [totalValue, setTotalValue] = useState<any>()
   const prevBalanceMappingRef = useRef<Map<Token, TokenBalances> | undefined>()
-  const prevPriceMappingRef = useRef<Map<Token, number> | undefined>()
+  const prevPriceMappingRef = useRef<Map<string, number> | undefined>()
 
   useEffect(() => {
     if (
@@ -58,7 +65,8 @@ export default function BalanceChart() {
       const dataValues = []
 
       for (let [token, balance] of balanceMapping) {
-        const tokenPrice = priceMapping.get(token) || 1
+        // Use actual price from CoinGecko, or 0 if not yet loaded (never default to 1)
+        const tokenPrice = priceMapping.get(token.coingecko_id) ?? 0
 
         if (balance.secretBalance !== null && balance.secretBalance instanceof BigNumber) {
           dataValues.push({
@@ -146,12 +154,12 @@ export default function BalanceChart() {
         ctx.restore()
       }
 
-      if (priceMapping !== null) {
+      if (priceMapping !== null && priceMapping.size > 0) {
         ctx.font = '400 1.25rem RundDisplay'
         ctx.fillStyle = theme === 'dark' ? '#fff' : '#000'
         ctx.textAlign = 'center'
         ctx.fillText(
-          totalValue ? `${toCurrencyString(convertCurrency('USD', totalValue, currency), currency)}` : ``,
+          totalValue !== undefined ? `${toCurrencyString(convertCurrency('USD', totalValue, currency), currency)}` : ``,
           width / 2,
           height / 1.65 + top
         )

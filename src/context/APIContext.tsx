@@ -7,6 +7,13 @@ import { Nullable } from 'types/Nullable'
 import { allTokens, bech32PrefixToChainName, coinGeckoCurrencyMap, sortDAppsArray } from 'utils/commons'
 import { SECRET_LCD, SECRET_CHAIN_ID } from 'utils/config'
 
+// CoinGecko Pro API support
+const COINGECKO_API_KEY = import.meta.env.VITE_COINGECKO_API_KEY
+const COINGECKO_BASE_URL = COINGECKO_API_KEY
+  ? 'https://pro-api.coingecko.com/api/v3'
+  : 'https://api.coingecko.com/api/v3'
+const coingeckoHeaders: HeadersInit = COINGECKO_API_KEY ? { 'x-cg-pro-api-key': COINGECKO_API_KEY } : {}
+
 const APIContext = createContext(null)
 
 const APIContextProvider = ({ children }: any) => {
@@ -79,13 +86,11 @@ const APIContextProvider = ({ children }: any) => {
       })
   }
 
-  const COINGECKO_CURRENCIES_URL =
-    //'https://api.coingecko.com/api/v3/simple/price?ids=usd&vs_currencies=eur,jpy,gbp,aud,cad,chf'
-    'https://priceapibuffer.secretsaturn.net/getCurrencies'
+  const COINGECKO_CURRENCIES_URL = `${COINGECKO_BASE_URL}/simple/price?ids=usd&vs_currencies=eur,jpy,gbp,aud,cad,chf`
 
   const fetchCurrencyPricingURL = async () => {
     try {
-      const response = await fetch(COINGECKO_CURRENCIES_URL)
+      const response = await fetch(COINGECKO_CURRENCIES_URL, { headers: coingeckoHeaders })
       if (!response.ok) throw new Error('Network response was not ok.')
       const jsonData = await response.json()
       let fullData = jsonData.usd
@@ -134,8 +139,8 @@ const APIContextProvider = ({ children }: any) => {
 
   useEffect(() => {
     // Coingecko API
-    const COINGECKO_API_URL_SCRT_DAY = `https://api.coingecko.com/api/v3/coins/secret/market_chart?vs_currency=${coinGeckoCurrencyMap[currency]}&days=1`
-    fetch(COINGECKO_API_URL_SCRT_DAY)
+    const COINGECKO_API_URL_SCRT_DAY = `${COINGECKO_BASE_URL}/coins/secret/market_chart?vs_currency=${coinGeckoCurrencyMap[currency]}&days=1`
+    fetch(COINGECKO_API_URL_SCRT_DAY, { headers: coingeckoHeaders })
       .catch((error: any) => console.error(error))
       .then((response) => (response as any).json())
       .catch((error: any) => console.error(error))
@@ -143,8 +148,8 @@ const APIContextProvider = ({ children }: any) => {
         setCoinGeckoApiData_Day(response)
       })
 
-    const COINGECKO_API_URL_SCRT_MONTH = `https://api.coingecko.com/api/v3/coins/secret/market_chart?vs_currency=${coinGeckoCurrencyMap[currency]}&days=30`
-    fetch(COINGECKO_API_URL_SCRT_MONTH)
+    const COINGECKO_API_URL_SCRT_MONTH = `${COINGECKO_BASE_URL}/coins/secret/market_chart?vs_currency=${coinGeckoCurrencyMap[currency]}&days=30`
+    fetch(COINGECKO_API_URL_SCRT_MONTH, { headers: coingeckoHeaders })
       .catch((error: any) => console.error(error))
       .then((response) => (response as any).json())
       .catch((error: any) => console.error(error))
@@ -152,8 +157,8 @@ const APIContextProvider = ({ children }: any) => {
         setCoinGeckoApiData_Month(response)
       })
 
-    const COINGECKO_API_URL_SCRT_YEAR = `https://api.coingecko.com/api/v3/coins/secret/market_chart?vs_currency=${coinGeckoCurrencyMap[currency]}&days=365`
-    fetch(COINGECKO_API_URL_SCRT_YEAR)
+    const COINGECKO_API_URL_SCRT_YEAR = `${COINGECKO_BASE_URL}/coins/secret/market_chart?vs_currency=${coinGeckoCurrencyMap[currency]}&days=365`
+    fetch(COINGECKO_API_URL_SCRT_YEAR, { headers: coingeckoHeaders })
       .catch((error: any) => console.error(error))
       .then((response) => (response as any).json())
       .catch((error: any) => console.error(error))
@@ -187,9 +192,9 @@ const APIContextProvider = ({ children }: any) => {
       })
 
     // Coingecko Market Price, Market Cap & Volume
-    //const COINGECKO_API_URL_MARKET_CAP_VOLUME = `https://api.coingecko.com/api/v3/simple/price?ids=secret&vs_currencies=usd,eur,jpy,gbp,aud,cad,chf&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true` // includes all supported currencies
-    const COINGECKO_API_URL_MARKET_CAP_VOLUME = 'https://priceapibuffer.secretsaturn.net/getVolume'
-    fetch(COINGECKO_API_URL_MARKET_CAP_VOLUME)
+    //const COINGECKO_API_URL_MARKET_CAP_VOLUME = `${COINGECKO_BASE_URL}/simple/price?ids=secret&vs_currencies=usd,eur,jpy,gbp,aud,cad,chf&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true` // includes all supported currencies
+    const COINGECKO_API_URL_MARKET_CAP_VOLUME = `${COINGECKO_BASE_URL}/simple/price?ids=secret&vs_currencies=usd,eur,jpy,gbp,aud,cad,chf&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true`
+    fetch(COINGECKO_API_URL_MARKET_CAP_VOLUME, { headers: coingeckoHeaders })
       .catch((error: any) => console.error(error))
       .then((response) => (response as any).json())
       .catch((error: any) => console.error(error))
