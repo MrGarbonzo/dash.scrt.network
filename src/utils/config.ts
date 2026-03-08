@@ -40,8 +40,14 @@ export const chains: { [chain_name: string]: Chain } = {
     withdraw_gas: 0,
     chain_id: 'secret-4',
     bech32_prefix: 'secret',
-    lcd: 'https://lcd.secret.adrius.starshell.net',
-    rpc: 'https://rpc.secret.adrius.starshell.net',
+    lcd:
+      (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SECRET_LCD) ||
+      process.env.VITE_SECRET_LCD ||
+      'https://lcd.secret.adrius.starshell.net',
+    rpc:
+      (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SECRET_RPC) ||
+      process.env.VITE_SECRET_RPC ||
+      'https://rpc.secret.adrius.starshell.net',
     chain_image: 'img/assets/scrt.svg',
     explorer_account: 'https://www.mintscan.io/secret/account/'
   },
