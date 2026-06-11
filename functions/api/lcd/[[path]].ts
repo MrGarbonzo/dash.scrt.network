@@ -12,7 +12,7 @@ export async function onRequest(context: any) {
   const { request, env } = context
   const url = new URL(request.url)
 
-  const upstream = (env.SECRET_LCD || '').replace(/\/+$/, '')
+  const upstream = (env.SECRET_LCD || '').trim().replace(/\/+$/, '')
   if (!upstream) {
     return new Response(JSON.stringify({ error: 'SECRET_LCD is not configured' }), {
       status: 500,
