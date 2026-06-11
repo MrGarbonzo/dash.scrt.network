@@ -40,13 +40,16 @@ export const chains: { [chain_name: string]: Chain } = {
     withdraw_gas: 0,
     chain_id: 'secret-4',
     bech32_prefix: 'secret',
+    // Overridable via env (.env) so endpoints aren't hardcoded; falls back to the default below.
+    // The `typeof import.meta` guard avoids esbuild's empty-import-meta warning in CJS contexts.
+    // LCD = secretjs gRPC-web/REST query endpoint. Set VITE_SECRET_LCD in .env to the real
+    // (private/paid) endpoint; the default below is only a public fallback and must stay public.
     lcd:
       (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SECRET_LCD) ||
-      process.env.VITE_SECRET_LCD ||
       'https://lcd.secret.adrius.starshell.net',
+    // RPC = Tendermint RPC (only used for IBC broadcasts via cosmjs). Override via VITE_SECRET_RPC.
     rpc:
       (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SECRET_RPC) ||
-      process.env.VITE_SECRET_RPC ||
       'https://rpc.secret.adrius.starshell.net',
     chain_image: 'img/assets/scrt.svg',
     explorer_account: 'https://www.mintscan.io/secret/account/'
