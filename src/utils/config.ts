@@ -40,13 +40,13 @@ export const chains: { [chain_name: string]: Chain } = {
     withdraw_gas: 0,
     chain_id: 'secret-4',
     bech32_prefix: 'secret',
-    // Overridable via env (.env) so endpoints aren't hardcoded; falls back to the default below.
-    // The `typeof import.meta` guard avoids esbuild's empty-import-meta warning in CJS contexts.
-    // LCD = secretjs gRPC-web/REST query endpoint. Set VITE_SECRET_LCD in .env to the real
-    // (private/paid) endpoint; the default below is only a public fallback and must stay public.
-    lcd:
-      (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SECRET_LCD) ||
-      'https://lcd.secret.adrius.starshell.net',
+    // LCD = secretjs gRPC-gateway (REST) query endpoint.
+    // The private/paid upstream must NOT ship in the client bundle, so the browser talks to a
+    // same-origin proxy (/api/lcd, a Cloudflare Pages Function) that forwards to the real endpoint
+    // stored server-side in the SECRET_LCD runtime secret. See functions/api/lcd/[[path]].ts.
+    // VITE_SECRET_LCD may override this (e.g. point directly at a node for local `vite dev`, which
+    // doesn't run Pages Functions). The `typeof import.meta` guard avoids esbuild's warning in CJS.
+    lcd: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SECRET_LCD) || '/api/lcd',
     // RPC = Tendermint RPC (only used for IBC broadcasts via cosmjs). Override via VITE_SECRET_RPC.
     rpc:
       (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SECRET_RPC) ||
