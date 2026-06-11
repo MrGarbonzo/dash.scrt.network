@@ -8,8 +8,15 @@ export async function onRequest(context: any) {
   // Extract the path after /api/
   const apiPath = url.pathname.replace('/api/', '/')
 
-  // Backend server URL (from environment variable or default to test VM)
-  const BACKEND_URL = context.env.BACKEND_URL || 'http://104.131.104.100:3001'
+  // Backend server URL — env-driven only, no hardcoded fallback (trim to tolerate
+  // stray whitespace in the dashboard variable). Fail loudly if it isn't configured.
+  const BACKEND_URL = (context.env.BACKEND_URL || '').trim().replace(/\/+$/, '')
+  if (!BACKEND_URL) {
+    return new Response(JSON.stringify({ error: 'BACKEND_URL is not configured' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    })
+  }
 
   // Build the backend URL
   const backendUrl = `${BACKEND_URL}${apiPath}${url.search}`
